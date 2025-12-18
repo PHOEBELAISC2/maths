@@ -1,0 +1,996 @@
+<!doctype html>
+<html lang="zh-HK">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>數學跳袋大挑戰（雙人Q版）</title>
+  <style>
+    :root{
+      --bgTop:#87d4ff;
+      --bgMid:#bfefff;
+      --bgBot:#8df0a9;
+
+      --cardBg: rgba(255,255,255,.55);
+      --shadow: 0 16px 36px rgba(0,0,0,.14);
+      --radius: 28px;
+
+      --p1:#1f5bff;
+      --p2:#d61b1b;
+
+      --title:#1c2b39;
+      --muted:#4e6a7e;
+
+      --btn:#fff;
+      --btnShadow: 0 10px 20px rgba(0,0,0,.12);
+      --danger:#ff4d4f;
+      --primary:#2b7cff;
+
+      --ok:#11a54d;
+      --bad:#ff3b30;
+    }
+
+    *{ box-sizing: border-box; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Noto Sans TC", "PingFang HK", "Microsoft JhengHei", sans-serif;
+      background: linear-gradient(180deg,var(--bgTop), var(--bgMid) 44%, var(--bgBot));
+      min-height:100vh;
+      overflow-x:hidden;
+    }
+
+    .wrap{
+      max-width: 1260px;
+      margin: 0 auto;
+      padding: 20px 18px 28px;
+      display:flex;
+      gap:18px;
+      align-items:stretch;
+    }
+
+    .panel{
+      width: 340px;
+      background: var(--cardBg);
+      border-radius: var(--radius);
+      padding: 14px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(7px);
+      border: 1px solid rgba(255,255,255,.55);
+    }
+
+    .qbar{
+      border-radius: 20px;
+      padding: 18px 16px;
+      color:#fff;
+      font-weight: 1000;
+      font-size: 34px;
+      text-align:center;
+      letter-spacing: 1px;
+      box-shadow: 0 12px 22px rgba(0,0,0,.16);
+      user-select:none;
+      position: relative;
+      overflow:hidden;
+    }
+    .qbar::after{
+      content:"";
+      position:absolute;
+      inset:-40% -20%;
+      background: radial-gradient(circle at 30% 25%, rgba(255,255,255,.22), transparent 55%);
+      transform: rotate(8deg);
+      pointer-events:none;
+    }
+    .qbar.p1{ background: #16206b; }
+    .qbar.p2{ background: #b10f10; }
+
+    .screen{
+      margin-top: 12px;
+      background: rgba(255,255,255,.9);
+      border-radius: 18px;
+      height: 58px;
+      display:flex;
+      align-items:center;
+      justify-content:flex-end;
+      padding: 0 14px;
+      font-size: 30px;
+      font-weight: 1000;
+      color: var(--title);
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+      overflow:hidden;
+    }
+
+    .keypad{
+      margin-top: 12px;
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .key{
+      border:0;
+      border-radius: 18px;
+      padding: 14px 0;
+      font-size: 26px;
+      font-weight: 1000;
+      background: var(--btn);
+      color: #1b2b3a;
+      box-shadow: var(--btnShadow);
+      cursor:pointer;
+      user-select:none;
+      transition: transform .06s ease, filter .12s ease;
+    }
+    .key:active{ transform: translateY(1px) scale(.99); }
+    .key.danger{ background: #ff5a5f; color:#fff; }
+    .key.primary{ background: #3b8cff; color:#fff; }
+
+    .pos{
+      margin-top: 14px;
+      background: rgba(255,255,255,.82);
+      border-radius: 18px;
+      padding: 14px;
+      font-size: 20px;
+      font-weight: 1000;
+      color: var(--muted);
+      text-align:center;
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+    }
+    .pos b{ color: var(--primary); font-size: 28px; }
+
+    /* ===== Center ===== */
+    .center{
+      flex:1;
+      min-width: 480px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:flex-start;
+      padding: 6px 10px;
+      gap: 10px;
+    }
+
+    .topbar{
+      width:100%;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap: 10px;
+      margin-top: 6px;
+    }
+    .chip{
+      background: rgba(255,255,255,.72);
+      border: 1px solid rgba(255,255,255,.65);
+      border-radius: 999px;
+      padding: 10px 14px;
+      font-weight: 1000;
+      color: var(--title);
+      box-shadow: 0 12px 24px rgba(0,0,0,.10);
+      user-select:none;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .chip small{
+      font-weight:900;
+      color: rgba(28,43,57,.72);
+    }
+    .toggleRow{
+      display:flex; gap:8px; align-items:center;
+      padding-left: 8px;
+      border-left: 1px solid rgba(0,0,0,.08);
+      margin-left: 4px;
+    }
+    .switch{
+      width: 52px;
+      height: 30px;
+      background: rgba(0,0,0,.12);
+      border-radius: 999px;
+      position: relative;
+      cursor:pointer;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.5);
+    }
+    .switch .knob{
+      width: 26px; height: 26px;
+      background: #fff;
+      border-radius: 50%;
+      position:absolute;
+      top: 2px; left: 2px;
+      box-shadow: 0 8px 18px rgba(0,0,0,.12);
+      transition: left .2s ease;
+    }
+    .switch.on{ background: rgba(17,165,77,.30); }
+    .switch.on .knob{ left: 24px; }
+
+    .btnSmall{
+      border:0;
+      border-radius: 16px;
+      padding: 10px 12px;
+      font-weight: 1000;
+      cursor:pointer;
+      background: rgba(255,255,255,.78);
+      box-shadow: 0 12px 24px rgba(0,0,0,.10);
+      transition: transform .06s ease;
+    }
+    .btnSmall:active{ transform: translateY(1px); }
+
+    .title{
+      margin: 44px 0 6px;
+      font-size: 44px;
+      font-weight: 1100;
+      color: var(--title);
+      text-shadow: 0 2px 0 rgba(255,255,255,.45);
+      text-align:center;
+      letter-spacing: .5px;
+    }
+
+    .trackWrap{
+      width: 100%;
+      display:flex;
+      justify-content:center;
+      margin-top: 6px;
+    }
+
+    .track{
+      width: 92%;
+      max-width: 780px;
+      height: 220px;
+      position: relative;
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      border: 6px solid rgba(255,255,255,.38);
+      overflow:hidden;
+      background:
+        radial-gradient(circle at 18% 18%, rgba(255,255,255,.22), transparent 55%),
+        linear-gradient(180deg,#52d15a,#2aa63b);
+    }
+
+    .laneMark{
+      position:absolute;
+      inset: 0;
+      background:
+        linear-gradient(90deg, rgba(255,255,255,0) 0 10%,
+                              rgba(255,255,255,.82) 10% 14%,
+                              rgba(255,255,255,0) 14% 86%,
+                              rgba(255,255,255,.82) 86% 90%,
+                              rgba(255,255,255,0) 90% 100%);
+      opacity:.9;
+      pointer-events:none;
+    }
+
+    .finish{
+      position:absolute;
+      right: 18px;
+      top: 16px;
+      bottom: 16px;
+      width: 68px;
+      border-radius: 14px;
+      background: repeating-linear-gradient(45deg,#fff 0 12px,#ff3b30 12px 24px);
+      box-shadow: inset 0 0 0 3px rgba(255,255,255,.45);
+      opacity:.96;
+    }
+
+    .laneLine{
+      position:absolute;
+      left: 20px;
+      right: 102px;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.28);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.24);
+      pointer-events:none;
+    }
+    .laneLine.top{ top: 92px; }
+    .laneLine.bottom{ top: 152px; }
+
+    .grid{
+      position:absolute;
+      left: 18px;
+      right: 102px;
+      top: 18px;
+      bottom: 18px;
+      display:grid;
+      grid-template-columns: repeat(10, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      gap: 10px;
+      pointer-events:none;
+      opacity:.16;
+    }
+    .cell{
+      border-radius: 12px;
+      background: rgba(255,255,255,.9);
+      box-shadow: inset 0 0 0 2px rgba(255,255,255,.65);
+    }
+
+    /* ===== Q版角色（每玩家一個） ===== */
+    .runner{
+      position:absolute;
+      left: 18px;
+      width: 92px;
+      height: 92px;
+      border-radius: 24px;
+      transition: left .26s ease;
+      filter: drop-shadow(0 14px 16px rgba(0,0,0,.18));
+    }
+
+    .runner .shadow{
+      position:absolute;
+      bottom: -9px;
+      left: 50%;
+      width: 54px;
+      height: 14px;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,.18);
+      border-radius: 50%;
+      filter: blur(3px);
+      opacity:.55;
+      transition: transform .26s ease, opacity .26s ease;
+    }
+
+    .runner .tag{
+      position:absolute;
+      right: -8px;
+      top: -8px;
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.92);
+      box-shadow: 0 10px 18px rgba(0,0,0,.14);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight: 1100;
+      color: rgba(28,43,57,.9);
+      border: 1px solid rgba(0,0,0,.06);
+      z-index: 3;
+    }
+
+    .runner .bag{
+      position:absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 52px;
+      height: 56px;
+      border-radius: 20px 20px 18px 18px;
+      background: #b87a3a;
+      box-shadow: inset 0 -7px 0 rgba(0,0,0,.12);
+      z-index: 1;
+    }
+
+    .runner .head{
+      position:absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 44px;
+      height: 44px;
+      background: #ffcc9e;
+      border-radius: 50%;
+      box-shadow: inset 0 -5px 0 rgba(0,0,0,.08);
+      z-index: 2;
+    }
+
+    .runner .hair{
+      position:absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 46px;
+      height: 28px;
+      background: #4b2f24;
+      border-radius: 24px 24px 18px 18px;
+      z-index: 2;
+      opacity: .95;
+      box-shadow: inset 0 -4px 0 rgba(0,0,0,.12);
+    }
+
+    .runner .band{
+      position:absolute;
+      top: 26px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 52px; height: 12px;
+      border-radius: 999px;
+      box-shadow: 0 6px 10px rgba(0,0,0,.12);
+      z-index: 3;
+    }
+    .runner.p1 .band{ background: var(--p1); }
+    .runner.p2 .band{ background: var(--p2); }
+
+    .runner .face{
+      position:absolute;
+      top: 32px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 38px; height: 22px;
+      z-index: 3;
+    }
+    .eye{
+      position:absolute; top: 4px;
+      width: 7px; height: 7px;
+      background: #1c2b39;
+      border-radius: 50%;
+    }
+    .eye.left{ left: 4px; }
+    .eye.right{ right: 4px; }
+    .blush{
+      position:absolute;
+      top: 10px;
+      width: 10px; height: 6px;
+      background: rgba(255,105,135,.55);
+      border-radius: 999px;
+      filter: blur(.2px);
+      opacity:.9;
+    }
+    .blush.left{ left: 0px; }
+    .blush.right{ right: 0px; }
+
+    .mouth{
+      position:absolute;
+      left: 50%;
+      top: 12px;
+      width: 14px; height: 7px;
+      transform: translateX(-50%);
+      border: 3px solid #1c2b39;
+      border-top: 0;
+      border-left: 0;
+      border-right: 0;
+      border-radius: 0 0 10px 10px;
+      opacity:.9;
+    }
+
+    .runner .shirt{
+      position:absolute;
+      top: 54px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 52px;
+      height: 26px;
+      border-radius: 14px 14px 18px 18px;
+      box-shadow: inset 0 -6px 0 rgba(0,0,0,.10);
+      z-index: 2;
+      opacity:.95;
+    }
+    .runner.p1 .shirt{ background: rgba(31,91,255,.95); }
+    .runner.p2 .shirt{ background: rgba(214,27,27,.95); }
+
+    /* ===== Feedback & motion ===== */
+    @keyframes jump {
+      0%   { transform: translateY(0) scale(1); }
+      30%  { transform: translateY(-28px) scale(1.04); }
+      60%  { transform: translateY(0) scale(1); }
+      100% { transform: translateY(0) scale(1); }
+    }
+    @keyframes shake {
+      0%{ transform: translateX(0); }
+      20%{ transform: translateX(-8px); }
+      40%{ transform: translateX(8px); }
+      60%{ transform: translateX(-6px); }
+      80%{ transform: translateX(6px); }
+      100%{ transform: translateX(0); }
+    }
+    @keyframes pop {
+      0%{ transform: translateX(-50%) scale(.9); opacity:0; }
+      25%{ transform: translateX(-50%) scale(1.06); opacity:1; }
+      100%{ transform: translateX(-50%) scale(1); opacity:1; }
+    }
+
+    .jump{ animation: jump .34s ease; }
+    .shake{ animation: shake .30s ease; }
+    .jump .shadow{ transform: translateX(-50%) scale(.72); opacity:.35; }
+
+    .badge{
+      position:absolute;
+      left: 50%;
+      top: 14px;
+      transform: translateX(-50%);
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-weight: 1100;
+      color:#fff;
+      box-shadow: 0 12px 24px rgba(0,0,0,.16);
+      opacity:0;
+      pointer-events:none;
+      z-index: 5;
+    }
+    .badge.show{ animation: pop .38s ease forwards; }
+    .badge.ok{ background: rgba(17,165,77,.92); }
+    .badge.bad{ background: rgba(255,59,48,.92); }
+
+    /* 星星粒子 */
+    .spark{
+      position:absolute;
+      width: 10px; height: 10px;
+      background: rgba(255,255,255,.95);
+      border-radius: 3px;
+      transform: rotate(25deg);
+      box-shadow: 0 0 0 2px rgba(255,255,255,.55);
+      pointer-events:none;
+      opacity: 0;
+    }
+    @keyframes sparkFly {
+      0%{ transform: translate(0,0) rotate(25deg) scale(1); opacity:1; }
+      100%{ transform: translate(var(--dx), var(--dy)) rotate(85deg) scale(.7); opacity:0; }
+    }
+    .spark.go{ animation: sparkFly .46s ease forwards; }
+
+    .sub{
+      margin-top: 12px;
+      font-size: 20px;
+      font-weight: 1000;
+      color: rgba(28,43,57,.78);
+      text-align:center;
+    }
+    .toast{
+      margin-top: 12px;
+      background: rgba(255,255,255,.65);
+      border: 1px solid rgba(255,255,255,.62);
+      padding: 10px 14px;
+      border-radius: 999px;
+      box-shadow: 0 12px 24px rgba(0,0,0,.10);
+      font-weight: 1100;
+      color: var(--title);
+      text-align:center;
+      min-height: 22px;
+      max-width: 860px;
+    }
+    .win{ color: #0a7a2a; }
+
+    .cornerBtns{
+      position: fixed;
+      left: 18px;
+      bottom: 18px;
+      display:flex;
+      gap: 10px;
+      z-index: 20;
+    }
+    .cornerBtns.right{
+      left: auto;
+      right: 18px;
+    }
+    .iconBtn{
+      width: 52px;
+      height: 52px;
+      border: 1px solid rgba(255,255,255,.55);
+      background: rgba(255,255,255,.65);
+      border-radius: 16px;
+      box-shadow: 0 12px 24px rgba(0,0,0,.10);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      user-select:none;
+      font-weight: 1100;
+      color: rgba(28,43,57,.85);
+    }
+    .iconBtn:active{ transform: translateY(1px); }
+
+    @media (max-width: 980px){
+      .wrap{ flex-direction:column; }
+      .panel{ width:100%; }
+      .center{ min-width:auto; }
+      .title{ margin-top: 14px; font-size: 34px; }
+      .track{ height: 210px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="wrap">
+
+    <!-- Player 1 -->
+    <section class="panel" aria-label="玩家一">
+      <div class="qbar p1" id="q1">—</div>
+      <div class="screen" id="s1"></div>
+      <div class="keypad" id="k1"></div>
+      <div class="pos">進度：<b id="p1">0</b>/10</div>
+    </section>
+
+    <!-- Center -->
+    <main class="center">
+      <div class="topbar">
+        <div class="chip">
+          <span>模式：雙人同屏</span>
+          <div class="toggleRow">
+            <small>音效</small>
+            <div class="switch on" id="soundSwitch" role="switch" aria-checked="true">
+              <div class="knob"></div>
+            </div>
+          </div>
+          <div class="toggleRow">
+            <small>運算</small>
+            <span>加＋減</span>
+          </div>
+        </div>
+        <button class="btnSmall" id="resetBtn">重新開始</button>
+      </div>
+
+      <div class="title">數學跳袋大挑戰</div>
+
+      <div class="trackWrap">
+        <div class="track" id="track" role="img" aria-label="跑道">
+          <div class="laneMark"></div>
+          <div class="finish"></div>
+          <div class="laneLine top"></div>
+          <div class="laneLine bottom"></div>
+
+          <div class="grid" aria-hidden="true">
+            <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+            <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+            <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+            <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+          </div>
+
+          <div class="badge" id="badge">OK</div>
+
+          <!-- 玩家1（藍）上跑道 -->
+          <div class="runner p1" id="runner1" style="top: 40px;">
+            <div class="tag">1</div>
+            <div class="shadow"></div>
+            <div class="bag"></div>
+            <div class="shirt"></div>
+            <div class="head"></div>
+            <div class="hair"></div>
+            <div class="band"></div>
+            <div class="face">
+              <div class="eye left"></div>
+              <div class="eye right"></div>
+              <div class="blush left"></div>
+              <div class="blush right"></div>
+              <div class="mouth"></div>
+            </div>
+          </div>
+
+          <!-- 玩家2（紅）下跑道 -->
+          <div class="runner p2" id="runner2" style="top: 110px;">
+            <div class="tag">2</div>
+            <div class="shadow"></div>
+            <div class="bag"></div>
+            <div class="shirt"></div>
+            <div class="head"></div>
+            <div class="hair"></div>
+            <div class="band"></div>
+            <div class="face">
+              <div class="eye left"></div>
+              <div class="eye right"></div>
+              <div class="blush left"></div>
+              <div class="blush right"></div>
+              <div class="mouth"></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="sub">答啱就向前跳一步！（完成 10 次跳躍即可獲勝）</div>
+      <div class="toast" id="toast">提示：第一次點任何按鈕會啟動音效（手機瀏覽器規則）</div>
+    </main>
+
+    <!-- Player 2 -->
+    <section class="panel" aria-label="玩家二">
+      <div class="qbar p2" id="q2">—</div>
+      <div class="screen" id="s2"></div>
+      <div class="keypad" id="k2"></div>
+      <div class="pos">進度：<b id="p2">0</b>/10</div>
+    </section>
+
+  </div>
+
+  <div class="cornerBtns">
+    <div class="iconBtn" id="homeBtn" title="主頁">🏠</div>
+  </div>
+  <div class="cornerBtns right">
+    <div class="iconBtn" id="fsBtn" title="全螢幕">⛶</div>
+  </div>
+
+<script>
+/* ===== 設定 ===== */
+const WIN_STEPS = 10;
+const OPS = ["+","-"];               // 加減
+const RANGE = { min: 1, max: 9 };
+const MAX_DIGITS = 2;
+
+const state = {
+  ended:false,
+  soundOn:true,
+  p1: { step:0, input:"", a:0, b:0, op:"+", ans:0 },
+  p2: { step:0, input:"", a:0, b:0, op:"+", ans:0 },
+};
+
+// DOM
+const q1 = document.getElementById("q1");
+const q2 = document.getElementById("q2");
+const s1 = document.getElementById("s1");
+const s2 = document.getElementById("s2");
+const p1 = document.getElementById("p1");
+const p2 = document.getElementById("p2");
+const r1 = document.getElementById("runner1");
+const r2 = document.getElementById("runner2");
+const track = document.getElementById("track");
+const toast = document.getElementById("toast");
+const badge = document.getElementById("badge");
+
+const resetBtn = document.getElementById("resetBtn");
+const fsBtn = document.getElementById("fsBtn");
+const homeBtn = document.getElementById("homeBtn");
+const soundSwitch = document.getElementById("soundSwitch");
+
+/* ===== 工具 ===== */
+function randInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+function fmtQuestion(a, op, b){
+  const sym = op === "+" ? "＋" : "－";
+  return `${a} ${sym} ${b} ＝ ？`;
+}
+
+function makeQuestion(player){
+  let a = randInt(RANGE.min, RANGE.max);
+  let b = randInt(RANGE.min, RANGE.max);
+  const op = pick(OPS);
+
+  if(op === "-" && b > a){ [a,b] = [b,a]; }
+  const ans = (op === "+") ? (a+b) : (a-b);
+
+  player.a=a; player.b=b; player.op=op; player.ans=ans;
+  player.input="";
+}
+
+function setToast(msg, win=false){
+  toast.innerHTML = win ? `<span class="win">${msg}</span>` : msg;
+}
+
+/* ===== 音效（WebAudio） ===== */
+let audioCtx = null;
+function ensureAudio(){
+  if(!audioCtx){
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if(audioCtx.state === "suspended"){ audioCtx.resume(); }
+}
+
+function beep({freq=440, dur=0.12, type="sine", gain=0.06}={}){
+  if(!state.soundOn) return;
+  ensureAudio();
+
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.type = type;
+  o.frequency.value = freq;
+  g.gain.value = gain;
+
+  o.connect(g); g.connect(audioCtx.destination);
+
+  const t = audioCtx.currentTime;
+  g.gain.setValueAtTime(gain, t);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+
+  o.start(t); o.stop(t + dur);
+}
+
+function sfxCorrect(){
+  beep({freq:784, dur:0.08, type:"triangle", gain:0.06});
+  setTimeout(()=>beep({freq:988, dur:0.09, type:"triangle", gain:0.06}), 70);
+}
+function sfxWrong(){
+  beep({freq:220, dur:0.12, type:"sawtooth", gain:0.05});
+  setTimeout(()=>beep({freq:180, dur:0.14, type:"sawtooth", gain:0.05}), 90);
+}
+function sfxJump(){
+  beep({freq:520, dur:0.07, type:"sine", gain:0.04});
+}
+function sfxTap(){
+  beep({freq:680, dur:0.03, type:"sine", gain:0.02});
+}
+function sfxClear(){
+  beep({freq:320, dur:0.05, type:"sine", gain:0.03});
+}
+
+/* ===== 視覺效果 ===== */
+function flashBadge(text, ok=true){
+  badge.classList.remove("show","ok","bad");
+  badge.textContent = text;
+  badge.classList.add(ok ? "ok" : "bad");
+  void badge.offsetWidth;
+  badge.classList.add("show");
+  setTimeout(()=>badge.classList.remove("show"), 420);
+}
+
+function animateRunner(el, ok){
+  el.classList.remove("jump","shake");
+  void el.offsetWidth;
+  el.classList.add(ok ? "jump" : "shake");
+}
+
+function spawnSparks(x, y){
+  // x,y: track-local coords
+  const n = 10;
+  for(let i=0;i<n;i++){
+    const sp = document.createElement("div");
+    sp.className = "spark";
+    const dx = (Math.random()*2-1) * 46;
+    const dy = (Math.random()*2-1) * 36 - 10;
+    sp.style.left = `${x}px`;
+    sp.style.top = `${y}px`;
+    sp.style.setProperty("--dx", `${dx}px`);
+    sp.style.setProperty("--dy", `${dy}px`);
+    track.appendChild(sp);
+
+    // start
+    requestAnimationFrame(()=>{
+      sp.classList.add("go");
+      sp.style.opacity = "1";
+    });
+
+    setTimeout(()=>sp.remove(), 520);
+  }
+}
+
+function render(){
+  q1.textContent = fmtQuestion(state.p1.a, state.p1.op, state.p1.b);
+  q2.textContent = fmtQuestion(state.p2.a, state.p2.op, state.p2.b);
+
+  s1.textContent = state.p1.input;
+  s2.textContent = state.p2.input;
+
+  p1.textContent = state.p1.step;
+  p2.textContent = state.p2.step;
+
+  // 跑道位置：保留右邊終點區
+  const finishReserve = 110; // finish+padding
+  const leftPad = 18;
+  const usable = track.clientWidth - finishReserve - leftPad - 92; // runner width
+
+  const x1 = leftPad + (state.p1.step / WIN_STEPS) * usable;
+  const x2 = leftPad + (state.p2.step / WIN_STEPS) * usable;
+
+  r1.style.left = `${x1}px`;
+  r2.style.left = `${x2}px`;
+}
+
+function checkWin(){
+  if(state.ended) return;
+  if(state.p1.step >= WIN_STEPS){
+    state.ended = true;
+    setToast("🎉 玩家 1 勝出！按「重新開始」再玩～", true);
+    flashBadge("玩家1 勝出", true);
+    sfxCorrect();
+  }else if(state.p2.step >= WIN_STEPS){
+    state.ended = true;
+    setToast("🎉 玩家 2 勝出！按「重新開始」再玩～", true);
+    flashBadge("玩家2 勝出", true);
+    sfxCorrect();
+  }
+}
+
+/* ===== 遊戲流程 ===== */
+function submit(playerKey){
+  if(state.ended) return;
+
+  const player = state[playerKey];
+  const inputVal = player.input === "" ? NaN : Number(player.input);
+  const isCorrect = (inputVal === player.ans);
+
+  const runner = (playerKey === "p1") ? r1 : r2;
+
+  if(isCorrect){
+    player.step += 1;
+    setToast(`✅ ${playerKey==="p1" ? "玩家 1" : "玩家 2"} 答啱！向前跳一步！`);
+    flashBadge("答啱！+1", true);
+    sfxCorrect();
+    sfxJump();
+    animateRunner(runner, true);
+
+    // 星星出現於角色附近
+    const rectT = track.getBoundingClientRect();
+    const rectR = runner.getBoundingClientRect();
+    const x = (rectR.left - rectT.left) + rectR.width/2;
+    const y = (rectR.top - rectT.top) + rectR.height/2 - 6;
+    spawnSparks(x, y);
+  }else{
+    setToast(`❌ ${playerKey==="p1" ? "玩家 1" : "玩家 2"} 答錯～ 正確答案係 ${player.ans}`);
+    flashBadge("答錯！", false);
+    sfxWrong();
+    animateRunner(runner, false);
+  }
+
+  makeQuestion(player);
+  render();
+  checkWin();
+}
+
+function clearInput(playerKey){
+  if(state.ended) return;
+  state[playerKey].input = "";
+  render();
+  sfxClear();
+}
+
+function pushDigit(playerKey, d){
+  if(state.ended) return;
+  ensureAudio(); // 解鎖音效
+  const player = state[playerKey];
+  if(player.input.length >= MAX_DIGITS) return;
+  player.input += String(d);
+  render();
+  sfxTap();
+}
+
+/* ===== Keypads ===== */
+function buildKeypad(containerId, playerKey){
+  const container = document.getElementById(containerId);
+  const keys = [1,2,3,4,5,6,7,8,9,"C",0,"OK"];
+  keys.forEach(k=>{
+    const btn = document.createElement("button");
+    btn.className = "key";
+    btn.type = "button";
+    btn.textContent = (k === "OK") ? "確定" : k;
+    if(k === "C") btn.classList.add("danger");
+    if(k === "OK") btn.classList.add("primary");
+
+    btn.addEventListener("click", ()=>{
+      if(k === "C") clearInput(playerKey);
+      else if(k === "OK") submit(playerKey);
+      else pushDigit(playerKey, k);
+    });
+
+    container.appendChild(btn);
+  });
+}
+
+/* ===== 控制 ===== */
+function reset(){
+  state.ended = false;
+  state.p1.step = 0; state.p2.step = 0;
+  makeQuestion(state.p1);
+  makeQuestion(state.p2);
+  setToast("準備好就開始答題啦！");
+  render();
+}
+
+resetBtn.addEventListener("click", ()=>{
+  ensureAudio();
+  beep({freq:520, dur:0.06, type:"triangle", gain:0.04});
+  reset();
+});
+
+soundSwitch.addEventListener("click", ()=>{
+  state.soundOn = !state.soundOn;
+  soundSwitch.classList.toggle("on", state.soundOn);
+  soundSwitch.setAttribute("aria-checked", String(state.soundOn));
+  if(state.soundOn){
+    ensureAudio();
+    beep({freq:880, dur:0.05, type:"triangle", gain:0.03});
+    setToast("🔊 已開啟音效");
+  }else{
+    setToast("🔇 已關閉音效");
+  }
+});
+
+homeBtn.addEventListener("click", ()=>{
+  ensureAudio();
+  beep({freq:520, dur:0.06, type:"sine", gain:0.03});
+  reset();
+});
+
+fsBtn.addEventListener("click", async ()=>{
+  ensureAudio();
+  try{
+    if(!document.fullscreenElement){
+      await document.documentElement.requestFullscreen();
+      beep({freq:900, dur:0.05, type:"triangle", gain:0.03});
+    }else{
+      await document.exitFullscreen();
+      beep({freq:600, dur:0.05, type:"triangle", gain:0.03});
+    }
+  }catch(e){
+    setToast("此瀏覽器未支援全螢幕。");
+  }
+});
+
+window.addEventListener("resize", render);
+
+/* ===== Init ===== */
+buildKeypad("k1","p1");
+buildKeypad("k2","p2");
+reset();
+</script>
+</body>
+</html>
